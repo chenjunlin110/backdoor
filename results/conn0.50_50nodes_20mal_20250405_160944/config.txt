@@ -1,0 +1,22 @@
+=== System Configuration ===
+n_nodes: 50
+malicious_fraction: 0.2
+connection_probability: 0.5
+topology: random
+
+=== Learning Configuration ===
+rounds: 150
+local_epochs: 1
+batch_size: 192
+lr: 0.01
+momentum: 0.5
+
+=== Data Configuration ===
+samples_per_node: 1200
+download: True
+data_path: ./data
+
+=== Backdoor Attack Configuration ===
+trigger_pattern: [(26, 26), (26, 27), (27, 26), (27, 27)]
+target_label: 0
+poison_ratio: 0.8

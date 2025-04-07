@@ -1,0 +1,10 @@
+=== Experiment Results ===
+
+avg_accuracy: 0.9255
+avg_attack_success_rate: 0.1494
+malicious_accuracy: 0.7261
+normal_accuracy: 0.9753
+malicious_attack_success_rate: 0.3471
+normal_attack_success_rate: 0.0999
+propagation_rate: 0.0000
+degree_asr_correlation: 0.2853
