@@ -1,6 +1,6 @@
 import os
 import random
-
+import time
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -125,50 +125,59 @@ class DecentralizedLearningSystem:
         # Track performance each round
         round_accuracies = []
         round_attack_rates = []
+        early_stop = False
 
         for round_idx in range(rounds):
-            print(f"Round {round_idx + 1}/{rounds}")
+            if not early_stop:
+                start_time = time.time()
+                print(f"Round {round_idx + 1}/{rounds}")
 
-            # Local training for each node
-            for node in self.nodes.values():
-                node.train_local(epochs=local_epochs)
+                # Local training for each node
+                for node in self.nodes.values():
+                    node.train_local(epochs=local_epochs)
 
-            # Model exchange and aggregation
-            new_weights = {node_id: {} for node_id in self.nodes}
+                # Model exchange and aggregation
+                new_weights = {node_id: {} for node_id in self.nodes}
 
-            for node_id, node in self.nodes.items():
-                # Collect models from self and neighbors
-                all_weights = [node.model.get_weights()]
-                for neighbor_id in node.neighbors:
-                    neighbor = self.nodes[neighbor_id]
-                    all_weights.append(neighbor.model.get_weights())
+                for node_id, node in self.nodes.items():
+                    # Collect models from self and neighbors
+                    all_weights = [node.model.get_weights()]
+                    for neighbor_id in node.neighbors:
+                        neighbor = self.nodes[neighbor_id]
+                        all_weights.append(neighbor.model.get_weights())
 
-                # Model aggregation (simple average)
-                for key in all_weights[0]:
-                    stacked_weights = torch.stack([w[key].float() for w in all_weights])
-                    mean_weights = stacked_weights.mean(dim=0)
+                    # Model aggregation (simple average)
+                    for key in all_weights[0]:
+                        stacked_weights = torch.stack([w[key].float() for w in all_weights])
+                        mean_weights = stacked_weights.mean(dim=0)
 
-                    new_weights[node_id][key] = mean_weights
+                        new_weights[node_id][key] = mean_weights
 
-            # Update each node's model weights
-            for node_id, node in self.nodes.items():
-                # Malicious nodes may choose not to update in some rounds
-                if node.is_malicious:
-                    print(f"Malicious node {node_id} refuses to update")
-                    continue
-                else:
-                    node.model.set_weights(new_weights[node_id])
+                # Update each node's model weights
+                for node_id, node in self.nodes.items():
+                    # Malicious nodes may choose not to update in some rounds
+                    if node.is_malicious:
+                        print(f"Malicious node {node_id} refuses to update")
+                        continue
+                    else:
+                        node.model.set_weights(new_weights[node_id])
 
-            # If test data is provided, evaluate performance after each round
-            if test_data is not None and test_labels is not None:
-                accuracies = self.evaluate_system(test_data, test_labels, verbose=False)
-                attack_rates = self.evaluate_backdoor_attack(test_data, verbose=False)
+                # If test data is provided, evaluate performance after each round
+                if test_data is not None and test_labels is not None:
+                    accuracies = self.evaluate_system(test_data, test_labels, verbose=False)
+                    attack_rates = self.evaluate_backdoor_attack(test_data, verbose=False)
 
-                round_accuracies.append(sum(accuracies.values()) / len(accuracies))
-                round_attack_rates.append(sum(attack_rates.values()) / len(attack_rates))
+                    round_accuracies.append(sum(accuracies.values()) / len(accuracies))
+                    round_attack_rates.append(sum(attack_rates.values()) / len(attack_rates))
 
-                print(f"Round {round_idx + 1} - Avg Accuracy: {round_accuracies[-1]:.4f}, "
-                      f"Avg Backdoor Success Rate: {round_attack_rates[-1]:.4f}")
+                    if round_accuracies[-1] > 0.95 and round_attack_rates[-1] > 0.95:
+                        print(f"early stop at round {round_idx + 1}")
+                        early_stop = True
+
+                    print(f"Round {round_idx + 1} - Avg Accuracy: {round_accuracies[-1]:.4f}, "
+                          f"Avg Backdoor Success Rate: {round_attack_rates[-1]:.4f}")
+                current_time = time.time()
+                print(f"Round {round_idx + 1} took {current_time - start_time:.2f} seconds")
 
         # Save training performance metrics
         self.training_metrics['accuracy_history'] = round_accuracies
@@ -177,6 +186,7 @@ class DecentralizedLearningSystem:
         # Visualize training progress
         if round_accuracies and round_attack_rates:
             self.visualize_training_progress()
+
     def evaluate_system(self, test_data, test_labels, verbose=True):
         """Evaluate system performance"""
         accuracies = {}

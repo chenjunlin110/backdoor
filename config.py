@@ -5,8 +5,8 @@ Configuration file for distributed learning system
 # System Configuration
 SYSTEM_CONFIG = {
     'n_nodes': 50,              # Number of nodes
-    'malicious_fraction': 0.04,  # Fraction of malicious nodes
-    'connection_probability': 0.5,  # Connection probability between nodes
+    'malicious_fraction': 0.1,  # Fraction of malicious nodes
+    'connection_probability': 0.7,  # Connection probability between nodes
     'topology': 'random',       # Network topology type: only 'random' is supported
 }
 
@@ -14,7 +14,7 @@ SYSTEM_CONFIG = {
 LEARNING_CONFIG = {
     'rounds': 500,               # Number of distributed learning rounds
     'local_epochs': 1,          # Number of local training epochs per round
-    'batch_size': 192,           # Batch size
+    'batch_size': 64,           # Batch size
     'lr': 0.01,                 # Learning rate
     'momentum': 0.5,            # Momentum
 }
